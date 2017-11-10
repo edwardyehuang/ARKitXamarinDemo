@@ -29,7 +29,7 @@ void PS()
 		vec4(+1.4020, -0.7141, +0.0000, +0.0000),
 		vec4(-0.7010, +0.5291, -0.8860, +1.0000));
 
-	vec4 ycbcr = vec4(texture2D(sDiffMap, vec2(vTexCoord.x + 0.05, vTexCoord.y)).r,
+	vec4 ycbcr = vec4(texture2D(sDiffMap, vec2(vTexCoord.x + 0.02, vTexCoord.y)).r,
 					  texture2D(sNormalMap, vTexCoord).ra, 1.0);
 	gl_FragColor = ycbcrToRGBTransform * ycbcr;
 }

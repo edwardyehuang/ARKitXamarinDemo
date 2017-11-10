@@ -71,7 +71,7 @@
     <DefineConstants>DEBUG;ENABLE_TEST_CLOUD;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodesignKey>iPhone Developer</CodesignKey>
+    <CodesignKey>iPhone Developer: Ye Huang (5NQXX6QMU2)</CodesignKey>
     <DeviceSpecificBuild>true</DeviceSpecificBuild>
     <MtouchDebug>true</MtouchDebug>
     <MtouchNoSymbolStrip>false</MtouchNoSymbolStrip>
@@ -85,6 +85,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OptimizePNGs>false</OptimizePNGs>
     <MtouchEnableSGenConc>true</MtouchEnableSGenConc>
+    <CodesignProvision>Visual Studio: UrhoSharp ARKit Development</CodesignProvision>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -123,6 +124,7 @@
     <Compile Include="MutantDemo.cs" />
     <Compile Include="CrowdDemo.cs" />
     <Compile Include="RulerDemo.cs" />
+    <Compile Include="GrilDemo.cs" />
   </ItemGroup>
   <ItemGroup>
     <BundleResource Include="Resources\UrhoData\ARRenderPath.xml" />

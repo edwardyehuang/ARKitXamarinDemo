@@ -6,6 +6,7 @@ using System.Linq;
 using Urho;
 using AVFoundation;
 using MonoTouch.Dialog;
+using Urho.iOS;
 
 namespace ARKitXamarinDemo
 {
@@ -24,11 +25,12 @@ namespace ARKitXamarinDemo
 			Window.RootViewController = new DialogViewController(rootElement);
 			var section = new Section("ARKit samples", "UrhoSharp");
 			rootElement.Add(section);
-			section.Add(new StringElement("Mutant demo", () => Run<MutantDemo>()));
+            section.Add(new StringElement("Mutant demo", () => RunMutantSurface()));
 			section.Add(new StringElement("Crowd demo", () => Run<CrowdDemo>()));
-			//section.Add(new StringElement("Ruler demo", () => Run<RulerDemo>()));
+			section.Add(new StringElement("Ruler demo", () => Run<RulerDemo>()));
 
 			Window.MakeKeyAndVisible();
+
 			return true;
 		}
 
@@ -36,9 +38,26 @@ namespace ARKitXamarinDemo
 		{
 			Urho.Application.CreateInstance<T>(new ApplicationOptions {
 				ResourcePaths = new[] { "UrhoData" },
-				Orientation = ApplicationOptions.OrientationType.Landscape
+                Orientation = ApplicationOptions.OrientationType.Portrait
 			}).Run();
 		}
+
+        void RunMutantSurface()
+        {
+            var viewController = new UIViewController();
+
+            var surface = new UrhoSurface(UIScreen.MainScreen.Bounds);
+
+            viewController.View.AddSubview(surface);
+
+            Window.RootViewController.PresentViewController(viewController, false, null);
+
+            surface.Show<MutantDemo>(new ApplicationOptions
+            {
+                ResourcePaths = new[] { "UrhoData" },
+                Orientation = ApplicationOptions.OrientationType.Portrait
+            });
+        }
 	}
 }
 

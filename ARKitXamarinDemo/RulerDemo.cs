@@ -118,7 +118,7 @@ namespace ARKitXamarinDemo
 			}
 
 			textNode.LookAt(CameraNode.Position, Vector3.UnitY);
-			textNode.Rotate(new Quaternion(0, 180, 0));
+			//textNode.Rotate(new Quaternion(0, 180, 0));
 		}
 
 		void OnUnhandledException(object sender, Urho.UnhandledExceptionEventArgs e)

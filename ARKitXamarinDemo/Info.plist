@@ -21,10 +21,6 @@
 	<array>
 		<string>armv7</string>
 	</array>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/AppIcon.appiconset</string>
 	<key>NSCameraUsageDescription</key>
@@ -34,8 +30,13 @@
 	<key>UIRequiresFullScreen</key>
 	<true/>
 	<key>CFBundleIdentifier</key>
-	<string>urho.demo</string>
+	<string>urho.demox</string>
 	<key>CFBundleName</key>
 	<string>UrhoSharp ARKit</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
 </dict>
 </plist>

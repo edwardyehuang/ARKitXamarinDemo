@@ -14,6 +14,11 @@ using Urho.Gui;
 using Urho.Navigation;
 using Urho.Physics;
 using System.Collections.Generic;
+using CoreVideo;
+using CoreMedia;
+using Accelerate;
+using CoreImage;
+using CoreGraphics;
 
 namespace ARKitXamarinDemo
 {
@@ -58,7 +63,7 @@ namespace ARKitXamarinDemo
 		public bool PlaneDetectionEnabled { get; set; } = true;
 
 		void CreateArScene()
-		{
+        {
 			// 3D scene with Octree and Zone
 			Scene = new Scene(Context);
 			Octree = Scene.CreateComponent<Octree>();
@@ -102,7 +107,7 @@ namespace ARKitXamarinDemo
 			ARSession = new ARSession { Delegate = arSessionDelegate };
 			var config = new ARWorldTrackingConfiguration();
 			//config.WorldAlignment = ARWorldAlignment.GravityAndHeading;
-			config.PlaneDetection = ARPlaneDetection.Horizontal;
+            config.PlaneDetection = ARPlaneDetection.Horizontal;
 			ARSession.Run(config, ARSessionRunOptions.RemoveExistingAnchors);
 		}
 
@@ -110,21 +115,28 @@ namespace ARKitXamarinDemo
 		unsafe protected void ApplyTransform(Node node, OpenTK.NMatrix4 matrix)
 		{
 			Matrix4 urhoTransform = *(Matrix4*)(void*)&matrix;
-			var rotation = urhoTransform.Rotation;
+
+            //urhoTransform = urhoTransform * Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(90));
+
+            var rotation = urhoTransform.Rotation;
 			rotation.Z *= -1;
 			var pos = urhoTransform.Row3;
-			node.SetWorldPosition(new Vector3(pos.X, pos.Y, -pos.Z));
-			node.Rotation = rotation;
+            node.SetWorldPosition(new Vector3(pos.X, pos.Y, -pos.Z));
+            node.Rotation = rotation;
 		}
 
 		public unsafe void ProcessARFrame(ARSession session, ARFrame frame)
 		{
-			var arcamera = frame?.Camera;
+            var arcamera = frame?.Camera;
+
 			var transform = arcamera.Transform;
-			var prj = arcamera.GetProjectionMatrix(UIInterfaceOrientation.LandscapeRight, new CoreGraphics.CGSize(Graphics.Width, Graphics.Height), 0.01f, 30f);
+            var prj = arcamera.GetProjectionMatrix(UIInterfaceOrientation.LandscapeRight, new CoreGraphics.CGSize(Graphics.Height, Graphics.Width), 0.01f, 30f);
 
 			//Urho accepts projection matrix in DirectX format (negative row3 + transpose)
 			var urhoProjection = *(Matrix4*)(void*)&prj;
+
+            urhoProjection = urhoProjection * Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(-90));
+
 			urhoProjection.Row2 *= -1;
 			urhoProjection.Transpose();
 
@@ -141,14 +153,18 @@ namespace ARKitXamarinDemo
 				cameraYtexture.FilterMode = TextureFilterMode.Bilinear;
 				cameraYtexture.SetAddressMode(TextureCoordinate.U, TextureAddressMode.Clamp);
 				cameraYtexture.SetAddressMode(TextureCoordinate.V, TextureAddressMode.Clamp);
-				cameraYtexture.SetSize((int)img.Width, (int)img.Height, Graphics.LuminanceFormat, TextureUsage.Dynamic);
+                //cameraYtexture.SetSize(878, (int)img.Width, Graphics.LuminanceFormat, TextureUsage.Dynamic);
+                cameraYtexture.SetSize((int)img.Height, (int)img.Width, Graphics.LuminanceFormat, TextureUsage.Dynamic);
+                //cameraYtexture.SetSize((int)img.Width, (int)img.Height, Graphics.LuminanceFormat, TextureUsage.Dynamic);
 				cameraYtexture.Name = nameof(cameraYtexture);
 				ResourceCache.AddManualResource(cameraYtexture);
 
 				// texture for UV-plane;
 				cameraUVtexture = new Texture2D();
 				cameraUVtexture.SetNumLevels(1);
-				cameraUVtexture.SetSize((int)img.GetWidthOfPlane(1), (int)img.GetHeightOfPlane(1), Graphics.LuminanceAlphaFormat, TextureUsage.Dynamic);
+                //cameraUVtexture.SetSize(439, (int)img.GetWidthOfPlane(1), Graphics.LuminanceAlphaFormat, TextureUsage.Dynamic);
+                cameraUVtexture.SetSize((int)img.GetHeightOfPlane(1), (int)img.GetWidthOfPlane(1), Graphics.LuminanceAlphaFormat, TextureUsage.Dynamic);
+                //cameraUVtexture.SetSize((int)img.GetWidthOfPlane(1), (int)img.GetHeightOfPlane(1), Graphics.LuminanceAlphaFormat, TextureUsage.Dynamic);
 				cameraUVtexture.FilterMode = TextureFilterMode.Bilinear;
 				cameraUVtexture.SetAddressMode(TextureCoordinate.U, TextureAddressMode.Clamp);
 				cameraUVtexture.SetAddressMode(TextureCoordinate.V, TextureAddressMode.Clamp);
@@ -158,15 +174,16 @@ namespace ARKitXamarinDemo
 				RenderPath rp = new RenderPath();
 				rp.Load(ResourceCache.GetXmlFile("ARRenderPath.xml"));
 				var cmd = rp.GetCommand(1); //see ARRenderPath.xml, second command.
-				cmd->SetTextureName(TextureUnit.Diffuse, cameraYtexture.Name); //sDiffMap
+                cmd->SetTextureName(TextureUnit.Diffuse, cameraYtexture.Name); //sDiffMap
 				cmd->SetTextureName(TextureUnit.Normal, cameraUVtexture.Name); //sNormalMap
 
 				var capturedImage = frame.CapturedImage;
 				var nativeBounds = UIScreen.MainScreen.NativeBounds;
-				float imageAspect = (float)capturedImage.Width / (float)capturedImage.Height;
+                float imageAspect = (float)capturedImage.Width / (float)capturedImage.Height;
 				float screenAspect = (float)nativeBounds.Size.Height / (float)nativeBounds.Size.Width;
 
-				cmd->SetShaderParameter("CameraScale", screenAspect / imageAspect);
+                //cmd->SetShaderParameter("CameraScale", 1);
+                cmd->SetShaderParameter("CameraScale", imageAspect / screenAspect );
 
 				//rp.Append(CoreAssets.PostProcess.FXAA2);
 				Viewport.RenderPath = rp;
@@ -189,7 +206,7 @@ namespace ARKitXamarinDemo
 
 			//use outside of InvokeOnMain?
 			if (yuvTexturesInited)
-				UpdateBackground(frame);
+                UpdateBackground(frame);
 
 			// required!
 			frame.Dispose();
@@ -197,22 +214,66 @@ namespace ARKitXamarinDemo
 
 		unsafe void UpdateBackground(ARFrame frame)
 		{
+            
 			using (var img = frame.CapturedImage)
 			{
-				var yPtr = img.BaseAddress;
-				var uvPtr = img.GetBaseAddress(1);
+                using (var ciImage = CIImage.FromImageBuffer(img))
+                {
+                    //var transform = frame.GetDisplayTransform(UIInterfaceOrientation.Portrait, new CoreGraphics.CGSize(Graphics.Width, Graphics.Height));
 
-				if (yPtr == IntPtr.Zero || uvPtr == IntPtr.Zero)
-					return;
+                    //using (var rotatedImage = ciImage.ImageByApplyingTransform(transform))
+                    using (var rotatedImage = ciImage.CreateByApplyingOrientation(ImageIO.CGImagePropertyOrientation.Right))
+                    {
+                        var size = new CGSize(rotatedImage.Extent.Size);
 
-				int wY = (int)img.Width;
-				int hY = (int)img.Height;
-				int wUv = (int)img.GetWidthOfPlane(1);
-				int hUv = (int)img.GetHeightOfPlane(1);
+                        using (var rotatedBuff = new CVPixelBuffer((nint)size.Width,
+                                                                   (nint)size.Height, img.PixelFormatType))
+                        {
 
-				cameraYtexture.SetData(0, 0, 0, wY, hY, (void*)yPtr);
-				cameraUVtexture.SetData(0, 0, 0, wUv, hUv, (void*)uvPtr);
+                            var _coreImageContext = new CIContext(null);
+
+                            rotatedBuff.Lock(CVPixelBufferLock.None);
+
+                            _coreImageContext.Render(rotatedImage, rotatedBuff);
+
+                            var yPtr = rotatedBuff.BaseAddress;
+                            var uvPtr = rotatedBuff.GetBaseAddress(1);
+
+                            if (yPtr == IntPtr.Zero || uvPtr == IntPtr.Zero)
+                                return;
+
+                            int wY = (int)rotatedBuff.Width;
+                            int hY = (int)rotatedBuff.Height;
+                            int wUv = (int)rotatedBuff.GetWidthOfPlane(1);
+                            int hUv = (int)rotatedBuff.GetHeightOfPlane(1);
+
+                            cameraYtexture.SetData(0, 0, 0, wY, hY, (void*)yPtr);
+            				cameraUVtexture.SetData(0, 0, 0, wUv, hUv, (void*)uvPtr);
+
+                            rotatedBuff.Unlock(CVPixelBufferLock.None);
+
+                            _coreImageContext.Dispose();
+                        }
+                    }
+                }
 			}
+            /*
+            using (var img = frame.CapturedImage)
+            {
+                var yPtr = img.BaseAddress;
+                var uvPtr = img.GetBaseAddress(1);
+
+                if (yPtr == IntPtr.Zero || uvPtr == IntPtr.Zero)
+                    return;
+
+                int wY = (int)img.Width;
+                int hY = (int)img.Height;
+                int wUv = (int)img.GetWidthOfPlane(1);
+                int hUv = (int)img.GetHeightOfPlane(1);
+
+                cameraYtexture.SetData(0, 0, 0, wY, hY, (void*)yPtr);
+                cameraUVtexture.SetData(0, 0, 0, wUv, hUv, (void*)uvPtr);
+            }*/
 		}
 
 		public Vector3? HitTest(float screenX = 0.5f, float screenY = 0.5f) =>
@@ -312,10 +373,10 @@ namespace ARKitXamarinDemo
 				planeNode.Scale = new Vector3(planeAnchor.Extent.X, 0.1f, planeAnchor.Extent.Z);
 				planeNode.Position = new Vector3(planeAnchor.Center.X, planeAnchor.Center.Y, -planeAnchor.Center.Z);
 
-				//var animation = new ValueAnimation();
-				//animation.SetKeyFrame(0.0f, 0.3f);
-				//animation.SetKeyFrame(0.5f, 0.0f);
-				//tileMaterial.SetShaderParameterAnimation("MeshAlpha", animation, WrapMode.Once, 1.0f);
+				var animation = new ValueAnimation();
+				animation.SetKeyFrame(0.0f, 0.3f);
+				animation.SetKeyFrame(0.5f, 0.0f);
+				tileMaterial.SetShaderParameterAnimation("MeshAlpha", animation, WrapMode.Once, 1.0f);
 
 				Debug.WriteLine($"ARPlaneAnchor  Extent({planeAnchor.Extent}), Center({planeAnchor.Center}), Position({planeAnchor.Transform.Row3}");
 			}
@@ -337,7 +398,7 @@ namespace ARKitXamarinDemo
 		}
 
 		public override void DidUpdateFrame(ARSession session, ARFrame frame)
-		{
+        {
 			if (arkitApp.TryGetTarget(out var ap))
 				Urho.Application.InvokeOnMain(() => ap.ProcessARFrame(session, frame));
 		}
