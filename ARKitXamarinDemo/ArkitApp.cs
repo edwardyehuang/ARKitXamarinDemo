@@ -104,8 +104,8 @@ namespace ARKitXamarinDemo
 			CreateArScene();
 
 			arSessionDelegate = new UrhoARSessionDelegate(this);
-			ARSession = new ARSession { Delegate = arSessionDelegate };
-			var config = new ARWorldTrackingConfiguration();
+			ARSession = new ARSession { Delegate = arSessionDelegate }; 
+            var config = new ARWorldTrackingConfiguration();
 			//config.WorldAlignment = ARWorldAlignment.GravityAndHeading;
             config.PlaneDetection = ARPlaneDetection.Horizontal;
 			ARSession.Run(config, ARSessionRunOptions.RemoveExistingAnchors);
@@ -219,9 +219,6 @@ namespace ARKitXamarinDemo
 			{
                 using (var ciImage = CIImage.FromImageBuffer(img))
                 {
-                    //var transform = frame.GetDisplayTransform(UIInterfaceOrientation.Portrait, new CoreGraphics.CGSize(Graphics.Width, Graphics.Height));
-
-                    //using (var rotatedImage = ciImage.ImageByApplyingTransform(transform))
                     using (var rotatedImage = ciImage.CreateByApplyingOrientation(ImageIO.CGImagePropertyOrientation.Right))
                     {
                         var size = new CGSize(rotatedImage.Extent.Size);
@@ -257,23 +254,6 @@ namespace ARKitXamarinDemo
                     }
                 }
 			}
-            /*
-            using (var img = frame.CapturedImage)
-            {
-                var yPtr = img.BaseAddress;
-                var uvPtr = img.GetBaseAddress(1);
-
-                if (yPtr == IntPtr.Zero || uvPtr == IntPtr.Zero)
-                    return;
-
-                int wY = (int)img.Width;
-                int hY = (int)img.Height;
-                int wUv = (int)img.GetWidthOfPlane(1);
-                int hUv = (int)img.GetHeightOfPlane(1);
-
-                cameraYtexture.SetData(0, 0, 0, wY, hY, (void*)yPtr);
-                cameraUVtexture.SetData(0, 0, 0, wUv, hUv, (void*)uvPtr);
-            }*/
 		}
 
 		public Vector3? HitTest(float screenX = 0.5f, float screenY = 0.5f) =>
